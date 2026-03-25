@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equi Proposal</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS with Custom Color Config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pink: {
+                            400: '#FF4D79',
+                            500: '#FF285A', // Target Shade: R255 G40 B90
+                            600: '#E62451',
+                            900: '#661024',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Three.js & RoundedBoxGeometry -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/RoundedBoxGeometry.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000000;
+            overflow-x: hidden; 
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            transition: background-color 1s ease;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #000000; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333; 
+            border-radius: 0px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555; 
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .font-montserrat {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .text-glow {
+            text-shadow: 0 0 40px rgba(0,0,0,0.8), 0 0 80px rgba(0,0,0,1.0);
+        }
+    </style>
+</head>
+<body class="text-white selection:bg-pink-500 selection:text-white">
+
+    <!-- Top Navigation Bar -->
+    <nav class="fixed top-0 left-0 w-full h-20 bg-black/90 backdrop-blur-md z-[60] flex items-center justify-between px-8 md:px-12 border-b border-white/10">
+        <div class="text-white font-montserrat font-bold tracking-[0.2em] text-xl">EQUI</div>
+        <button id="menu-toggle" class="relative w-8 h-8 flex flex-col items-center justify-center gap-2 focus:outline-none group">
+            <span id="menu-line-1" class="block w-8 h-[2px] bg-white transition-all duration-300"></span>
+            <span id="menu-line-2" class="block w-8 h-[2px] bg-white transition-all duration-300"></span>
+            <span id="menu-line-3" class="block w-8 h-[2px] bg-white transition-all duration-300"></span>
+        </button>
+    </nav>
+
+    <!-- Side Menu -->
+    <div id="fullscreen-menu" class="fixed top-0 right-0 w-full sm:w-[450px] h-screen bg-[#050505] border-l border-white/5 z-[50] flex flex-col items-start justify-center opacity-0 pointer-events-none translate-x-full transition-all duration-500 shadow-2xl">
+        <ul class="text-left space-y-6 md:space-y-8 text-lg md:text-xl font-montserrat font-light text-gray-500 pl-12 md:pl-20 w-full pr-12">
+            <li>
+                <a href="#" class="menu-link group flex items-center gap-6 w-full" data-scroll="0.0">
+                    <span class="text-xs font-bold text-gray-700 transition-colors group-hover:text-pink-500 w-6">01</span>
+                    <span class="transition-colors group-hover:text-white">Homepage</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="menu-link group flex items-center gap-6 w-full" data-scroll="0.30">
+                    <span class="text-xs font-bold text-gray-700 transition-colors group-hover:text-pink-500 w-6">02</span>
+                    <span class="transition-colors group-hover:text-white">Understanding Your Needs</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="menu-link group flex items-center gap-6 w-full" data-scroll="0.55">
+                    <span class="text-xs font-bold text-gray-700 transition-colors group-hover:text-pink-500 w-6">03</span>
+                    <span class="transition-colors group-hover:text-white">Disruption Readiness</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="menu-link group flex items-center gap-6 w-full" data-scroll="0.80">
+                    <span class="text-xs font-bold text-gray-700 transition-colors group-hover:text-pink-500 w-6">04</span>
+                    <span class="transition-colors group-hover:text-white">Algorithmic Bias</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="menu-link group flex items-center gap-6 w-full" data-scroll="1.05">
+                    <span class="text-xs font-bold text-gray-700 transition-colors group-hover:text-pink-500 w-6">05</span>
+                    <span class="transition-colors group-hover:text-white">AI Capability</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="menu-link group flex items-center gap-6 w-full" data-scroll="1.30">
+                    <span class="text-xs font-bold text-gray-700 transition-colors group-hover:text-pink-500 w-6">06</span>
+                    <span class="transition-colors group-hover:text-white">Commercials</span>
+                </a>
+            </li>
+            <li class="pt-4 border-t border-white/5">
+                <a href="#" class="menu-link group flex items-center gap-6 w-full" data-scroll="1.50">
+                    <span class="text-xs font-bold text-pink-500 w-6">07</span>
+                    <span class="text-white font-medium transition-colors group-hover:text-pink-500">Next Steps</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Scroll Wrapper -->
+    <div class="relative w-full h-[1200vh]">
+        
+        <div id="canvas-container"></div>
+        
+        <div id="fade-overlay" class="fixed top-0 left-0 w-full h-screen bg-black z-20 pointer-events-none opacity-0 will-change-opacity"></div>
+
+        <!-- Section 1 UI (The Maze) -->
+        <div id="ui-sec-1" class="fixed top-0 left-0 w-full h-screen z-10 flex flex-col items-start justify-end pointer-events-none will-change-transform pb-24 pl-8 md:pl-24">
+            <h1 class="font-montserrat text-4xl md:text-5xl lg:text-7xl font-bold mb-4 tracking-tight text-white text-glow text-left uppercase">
+                Equi Proposal
+            </h1>
+            
+            <p class="text-lg md:text-xl text-gray-300 font-light leading-relaxed text-glow text-left uppercase tracking-widest">
+                Full disruption readiness<br>
+                Algorithmic biases<br>
+                AI capability development
+            </p>
+        </div>
+
+        <!-- Section 2 UI (Understanding Your Needs) -->
+        <div id="ui-sec-2" class="fixed top-0 left-0 w-full h-screen z-10 flex pointer-events-none opacity-0">
+            <div class="w-[55%] hidden lg:block"></div>
+            <div class="w-full lg:w-[45%] flex items-center justify-center p-6 md:pr-16 lg:pr-24 h-full">
+                <!-- Clean Embedded Design -->
+                <div id="content-card" class="w-full max-w-2xl transform opacity-0 pointer-events-auto mt-20 relative">
+                    
+                    <h1 class="text-3xl md:text-4xl font-montserrat font-bold text-white mb-6 tracking-tight leading-snug">
+                        Understanding Your Needs
+                    </h1>
+                    
+                    <p class="text-gray-300 text-lg mb-10 leading-relaxed font-light">
+                        Equi has reached the end of its launch phase. The next phase requires becoming disruption-ready—not only for AI, but for any current or future disruptor.
+                    </p>
+                    
+                    <div class="space-y-5 mb-10 pl-2">
+                        <div class="flex items-start gap-4">
+                            <div class="w-1.5 h-1.5 bg-pink-500 mt-2.5 shrink-0"></div>
+                            <p class="text-gray-400 font-light leading-relaxed">Position Equi for substantive discussions on algorithmic bias.</p>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-1.5 h-1.5 bg-pink-500 mt-2.5 shrink-0"></div>
+                            <p class="text-gray-400 font-light leading-relaxed">Prepare for AI's impact on core research operations.</p>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-1.5 h-1.5 bg-pink-500 mt-2.5 shrink-0"></div>
+                            <p class="text-gray-400 font-light leading-relaxed">Build organizational readiness for ongoing disruption.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="border-l-2 border-pink-500 pl-6">
+                        <h4 class="text-white font-montserrat font-bold tracking-widest uppercase text-xs mb-2">Our Approach</h4>
+                        <p class="text-gray-400 font-light leading-relaxed text-sm md:text-base">
+                            A structured, three-part engagement that addresses immediate needs while building lasting capability.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3 UI (Disruption Readiness Workshop) -->
+        <div id="ui-sec-3" class="fixed top-0 left-0 w-full h-screen z-10 flex pointer-events-none opacity-0">
+            <div class="w-[55%] hidden lg:block"></div> 
+            <div class="w-full lg:w-[45%] flex items-center justify-center p-6 md:pr-16 lg:pr-24 h-full">
+                
+                <div id="content-card-3" class="w-full max-w-2xl transform opacity-0 pointer-events-auto mt-20 relative">
+                    
+                    <h1 class="text-3xl md:text-4xl font-montserrat font-bold text-white mb-6 tracking-tight leading-snug">
+                        Disruption Readiness Workshop
+                    </h1>
+                    
+                    <!-- Clean, fixed-height Roll Up Container -->
+                    <div class="relative w-full h-[400px] overflow-hidden" style="mask-image: linear-gradient(to bottom, black 80%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);">
+                        <div id="sec-3-inner" class="flex flex-col w-full h-[800px] will-change-transform">
+                            
+                            <!-- Part 1: Why this matters -->
+                            <div class="h-[400px] flex flex-col justify-start shrink-0 pt-2 pr-4">
+                                <h3 class="text-white font-montserrat font-bold tracking-widest uppercase text-xs mb-3">Why this matters for Equi</h3>
+                                <p class="text-gray-400 text-sm md:text-base leading-relaxed font-light mb-4">
+                                    Technology-enabled disruption is already established in the context of Equi's work, and in the months and years ahead, innovation with synthetic media and shifts in how trust is attributed online will create new pressures that no organisation can fully, accurately anticipate.
+                                </p>
+                                <p class="text-gray-400 text-sm md:text-base leading-relaxed font-light mb-8">
+                                    The organisations that will navigate multiple and simultaneous disruptions effectively will be ready to transform, shift direction and adapt across the full spectrum of operations — led by leaders who make conscious decisions using structured approaches to interpret new trends and threats.
+                                </p>
+                            </div>
+                            
+                            <!-- Part 2: Proposed Approach & Outcome -->
+                            <div class="h-[400px] flex flex-col justify-start shrink-0 pt-2 pr-4">
+                                <h3 class="text-white font-montserrat font-bold tracking-widest uppercase text-xs mb-4">Proposed Approach</h3>
+                                <div class="space-y-4 mb-8 pl-2">
+                                    <div class="flex items-start gap-4">
+                                        <div class="w-1.5 h-1.5 bg-pink-500 mt-2 shrink-0"></div>
+                                        <p class="text-gray-400 font-light leading-relaxed text-sm">Unlock conscious thinking about disruption.</p>
+                                    </div>
+                                    <div class="flex items-start gap-4">
+                                        <div class="w-1.5 h-1.5 bg-pink-500 mt-2 shrink-0"></div>
+                                        <p class="text-gray-400 font-light leading-relaxed text-sm">Diagnostic assessment with your stakeholders.</p>
+                                    </div>
+                                    <div class="flex items-start gap-4">
+                                        <div class="w-1.5 h-1.5 bg-pink-500 mt-2 shrink-0"></div>
+                                        <p class="text-gray-400 font-light leading-relaxed text-sm">Use algorithmic bias and AI adoption as live examples.</p>
+                                    </div>
+                                    <div class="flex items-start gap-4">
+                                        <div class="w-1.5 h-1.5 bg-pink-500 mt-2 shrink-0"></div>
+                                        <p class="text-gray-400 font-light leading-relaxed text-sm">Establish shared view of where Equi stands.</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="border-l-2 border-pink-500 pl-6">
+                                    <h4 class="text-white font-montserrat font-bold tracking-widest uppercase text-xs mb-2">Outcome</h4>
+                                    <p class="text-gray-400 font-light leading-relaxed text-sm">
+                                        Strategic framing and confidence to address your priority challenges.
+                                    </p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4 UI (Understanding Algorithmic Bias) -->
+        <div id="ui-sec-4" class="fixed top-0 left-0 w-full h-screen z-10 flex pointer-events-none opacity-0">
+            <div class="w-[55%] hidden lg:block"></div>
+            <div class="w-full lg:w-[45%] flex items-center justify-center p-6 md:pr-16 lg:pr-24 h-full">
+                
+                <div id="content-card-4" class="w-full max-w-2xl transform opacity-0 pointer-events-auto mt-20 relative">
+                    
+                    <h1 class="text-3xl md:text-4xl font-montserrat font-bold text-white mb-6 tracking-tight leading-snug">
+                        Understanding Algorithmic Bias
+                    </h1>
+
+                    <!-- Clean, fixed-height Roll Up Container -->
+                    <div class="relative w-full h-[400px] overflow-hidden" style="mask-image: linear-gradient(to bottom, black 80%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);">
+                        <div id="sec-4-inner" class="flex flex-col w-full h-[800px] will-change-transform">
+                            
+                            <!-- Part 1: Why this matters -->
+                            <div class="h-[400px] flex flex-col justify-start shrink-0 pt-2 pr-4">
+                                <h3 class="text-white font-montserrat font-bold tracking-widest uppercase text-xs mb-3">Why this matters for Equi</h3>
+                                <p class="text-gray-400 text-sm md:text-base leading-relaxed font-light mb-8">
+                                    Algorithmic bias on social media platforms — particularly the disproportionate reach of right-wing and anti-Muslim content — is a live and pressing issue that Equi has been invited to address. Doing so with credibility requires a clear, structured, repeatable and well-governed methodology that helps establish Equi's preferred position in key discussions.
+                                </p>
+                            </div>
+
+                            <!-- Part 2: Proposed Approach & Outcome -->
+                            <div class="h-[400px] flex flex-col justify-start shrink-0 pt-2 pr-4">
+                                <h3 class="text-white font-montserrat font-bold tracking-widest uppercase text-xs mb-4">Proposed Approach</h3>
+                                <div class="space-y-4 mb-8 pl-2">
+                                    <div class="flex items-start gap-4">
+                                        <div class="w-1.5 h-1.5 bg-pink-500 mt-2 shrink-0"></div>
+                                        <p class="text-gray-400 font-light leading-relaxed text-sm">Distinguish between coordinated behavior, platform bias, and legitimate engagement patterns.</p>
+                                    </div>
+                                    <div class="flex items-start gap-4">
+                                        <div class="w-1.5 h-1.5 bg-pink-500 mt-2 shrink-0"></div>
+                                        <p class="text-gray-400 font-light leading-relaxed text-sm">Build evidence base that withstands highest scrutiny.</p>
+                                    </div>
+                                    <div class="flex items-start gap-4">
+                                        <div class="w-1.5 h-1.5 bg-pink-500 mt-2 shrink-0"></div>
+                                        <p class="text-gray-400 font-light leading-relaxed text-sm">Establish repeatable, well-governed methodology.</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="border-l-2 border-pink-500 pl-6">
+                                    <h4 class="text-white font-montserrat font-bold tracking-widest uppercase text-xs mb-2">Outcome</h4>
+                                    <p class="text-gray-400 font-light leading-relaxed text-sm">
+                                        Credible evidence and clear positioning for key discussions on algorithmic bias.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 5 UI (AI Capability Development) -->
+        <div id="ui-sec-5" class="fixed top-0 left-0 w-full h-screen z-10 flex pointer-events-none opacity-0">
+            <div class="w-[55%] hidden lg:block"></div>
+            <div class="w-full lg:w-[45%] flex items-center justify-center p-6 md:pr-16 lg:pr-24 h-full">
+                
+                <div id="content-card-5" class="w-full max-w-2xl transform opacity-0 pointer-events-auto mt-20 relative">
+                    
+                    <h1 class="text-3xl md:text-4xl font-montserrat font-bold text-white mb-6 tracking-tight leading-snug">
+                        AI Capability & Skills Transfer
+                    </h1>
+
+                    <!-- Clean, fixed-height Roll Up Container -->
+                    <div class="relative w-full h-[400px] overflow-hidden" style="mask-image: linear-gradient(to bottom, black 80%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);">
+                        <div id="sec-5-inner" class="flex flex-col w-full h-[800px] will-change-transform">
+                            
+                            <!-- Part 1: Why this matters -->
+                            <div class="h-[400px] flex flex-col justify-start shrink-0 pt-2 pr-4">
+                                <h3 class="text-white font-montserrat font-bold tracking-widest uppercase text-xs mb-3">Why this matters for Equi</h3>
+                                <p class="text-gray-400 text-sm md:text-base leading-relaxed font-light mb-4">
+                                    Equi produces research that is careful, considered and impactful. The people who write it care deeply about the credibility of their work which serves as the foundation of Equi, its reputation and the experience of collaborating on key topics.
+                                </p>
+                                <p class="text-gray-400 text-sm md:text-base leading-relaxed font-light mb-8">
+                                    The cultural moment we're in that Equi's research could shape is evolving so quickly and AI best practices (which are also evolving quickly) could modify how fast and how widely Equi can contribute - potentially making it possible to produce research in a fraction of the time currently required.
+                                </p>
+                            </div>
+
+                            <!-- Part 2: Proposed Approach & Outcome -->
+                            <div class="h-[400px] flex flex-col justify-start shrink-0 pt-2 pr-4">
+                                <h3 class="text-white font-montserrat font-bold tracking-widest uppercase text-xs mb-4">Proposed Approach</h3>
+                                <div class="space-y-4 mb-8 pl-2">
+                                    <div class="flex items-start gap-4">
+                                        <div class="w-1.5 h-1.5 bg-pink-500 mt-2 shrink-0"></div>
+                                        <p class="text-gray-400 font-light leading-relaxed text-sm">Map research workflow and identify AI entry points.</p>
+                                    </div>
+                                    <div class="flex items-start gap-4">
+                                        <div class="w-1.5 h-1.5 bg-pink-500 mt-2 shrink-0"></div>
+                                        <p class="text-gray-400 font-light leading-relaxed text-sm">Understand tools, governance, and risk management.</p>
+                                    </div>
+                                    <div class="flex items-start gap-4">
+                                        <div class="w-1.5 h-1.5 bg-pink-500 mt-2 shrink-0"></div>
+                                        <p class="text-gray-400 font-light leading-relaxed text-sm">Evidence benefits in real-time through live work.</p>
+                                    </div>
+                                    <div class="flex items-start gap-4">
+                                        <div class="w-1.5 h-1.5 bg-pink-500 mt-2 shrink-0"></div>
+                                        <p class="text-gray-400 font-light leading-relaxed text-sm">Ensure capability stays with Equi post-engagement.</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="border-l-2 border-pink-500 pl-6">
+                                    <h4 class="text-white font-montserrat font-bold tracking-widest uppercase text-xs mb-2">Outcome</h4>
+                                    <p class="text-gray-400 font-light leading-relaxed text-sm">
+                                        Owned AI capability that accelerates research output without compromising quality or credibility.
+                                    </p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 6 UI (Commercials) -->
+        <div id="ui-sec-7" class="fixed top-0 left-0 w-full h-screen z-10 flex pointer-events-none opacity-0">
+            <div class="w-full flex items-center justify-center p-6 md:p-16 h-full">
+                <div id="content-card-7" class="w-full max-w-5xl pointer-events-auto mt-20">
+                    <h1 class="text-3xl md:text-5xl font-montserrat font-bold text-white mb-6 tracking-tight text-center">Commercials & Partnership</h1>
+                    <p class="text-gray-400 text-lg mb-16 font-light text-center max-w-2xl mx-auto leading-relaxed">We believe in building lasting relationships. This engagement is designed to establish capability that continues beyond our direct involvement.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+                        <div class="bg-[#0a0a0a] border border-white/10 border-t-2 border-t-pink-500 p-10 flex flex-col hover:border-pink-500/50 transition-colors shadow-2xl">
+                            <h3 class="text-pink-500 font-bold tracking-widest uppercase text-xs mb-4">Option 1</h3>
+                            <h4 class="text-white text-2xl md:text-3xl font-montserrat font-bold mb-8 leading-snug">Full Disruption Assessment & Readiness</h4>
+                            <div class="mt-auto pt-8 border-t border-white/10 flex items-center justify-between">
+                                <span class="text-sm text-gray-500 uppercase tracking-widest font-semibold">Investment</span>
+                                <span class="text-4xl font-light text-white">£70,000</span>
+                            </div>
+                        </div>
+                        <div class="bg-[#0a0a0a] border border-white/10 border-t-2 border-t-white/20 p-10 flex flex-col hover:border-white/50 transition-colors shadow-xl">
+                            <h3 class="text-gray-400 font-bold tracking-widest uppercase text-xs mb-4">Option 2</h3>
+                            <h4 class="text-gray-300 text-2xl md:text-3xl font-montserrat font-bold mb-8 leading-snug">AI Algorithmic <br>Report Only</h4>
+                            <div class="mt-auto pt-8 border-t border-white/10 flex items-center justify-between">
+                                <span class="text-sm text-gray-600 uppercase tracking-widest font-semibold">Investment</span>
+                                <span class="text-4xl font-light text-gray-400">£35,000</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 7 UI (Next Steps) -->
+        <div id="ui-sec-8" class="fixed top-0 left-0 w-full h-screen z-10 flex pointer-events-none opacity-0">
+            <div class="w-full flex items-center justify-center p-6 md:p-16 h-full">
+                <div id="content-card-8" class="w-full max-w-6xl pointer-events-auto flex flex-col items-center text-center mt-20">
+                    <h3 class="text-4xl md:text-6xl font-montserrat font-bold text-white mb-16 tracking-tight">Proposed next steps</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 text-left w-full mx-auto mb-14">
+                        <div class="bg-[#0a0a0a] border border-white/5 border-t-2 border-t-pink-500 p-8 md:p-10 shadow-2xl flex flex-col hover:-translate-y-2 transition-transform duration-300">
+                            <div class="w-8 h-8 rounded-full bg-pink-500/10 flex items-center justify-center mb-6 border border-pink-500/30"><span class="text-pink-500 font-bold text-sm">1</span></div>
+                            <h4 class="text-white font-montserrat font-bold text-xl mb-4">Your response</h4>
+                            <p class="text-gray-400 text-sm leading-relaxed font-light flex-grow">Tell us what resonates and what questions it raises. We can adapt the scope and investment approach to what is practically achievable.</p>
+                        </div>
+                        <div class="bg-[#0a0a0a] border border-white/5 border-t-2 border-t-pink-500 p-8 md:p-10 shadow-2xl flex flex-col hover:-translate-y-2 transition-transform duration-300">
+                            <div class="w-8 h-8 rounded-full bg-pink-500/10 flex items-center justify-center mb-6 border border-pink-500/30"><span class="text-pink-500 font-bold text-sm">2</span></div>
+                            <h4 class="text-white font-montserrat font-bold text-xl mb-4">Chemistry test</h4>
+                            <p class="text-gray-400 text-sm leading-relaxed font-light flex-grow">A focused conversation — in person where possible — to refine the scope, agree the investment approach, and confirm how you would like to present this to potential funders.</p>
+                        </div>
+                        <div class="bg-[#0a0a0a] border border-white/5 border-t-2 border-t-pink-500 p-8 md:p-10 shadow-2xl flex flex-col hover:-translate-y-2 transition-transform duration-300">
+                            <div class="w-8 h-8 rounded-full bg-pink-500/10 flex items-center justify-center mb-6 border border-pink-500/30"><span class="text-pink-500 font-bold text-sm">3</span></div>
+                            <h4 class="text-white font-montserrat font-bold text-xl mb-4">Mobilisation</h4>
+                            <p class="text-gray-400 text-sm leading-relaxed font-light flex-grow">We can mobilise a team within weeks of agreement.</p>
+                        </div>
+                    </div>
+                    <button class="px-10 py-4 bg-white text-black font-semibold text-sm tracking-widest uppercase hover:bg-pink-500 hover:text-white transition-colors duration-300 pointer-events-auto">Get in Touch</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 3D Application Logic -->
+    <script>
+        const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
+
+        window.onload = function() {
+            // --- Scene Setup ---
+            const container = document.getElementById('canvas-container');
+            const scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x000000, 0.008);
+
+            const camera = new THREE.PerspectiveCamera(20, window.innerWidth / window.innerHeight, 1, 1000);
+            camera.position.set(45, 45, 45); 
+            camera.lookAt(0, 0, 0);
+
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            // --- Lighting (Softened) ---
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+            scene.add(ambientLight);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.6); // Reduced intensity
+            dirLight.position.set(30, 60, -10);
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.width = 2048;
+            dirLight.shadow.mapSize.height = 2048;
+            scene.add(dirLight);
+
+            // --- Grid Geometry (21x21) ---
+            const gridSize = 21;
+            const cubeSize = 0.67375; 
+            const spacing = 1.0;
+            const offset = (gridSize * spacing) / 2 - (spacing / 2);
+            
+            const cubes = [];
+            const gridGroup = new THREE.Group();
+            scene.add(gridGroup);
+            const geometry = new THREE.RoundedBoxGeometry(cubeSize, cubeSize, cubeSize, 3, 0.03);
+            
+            const colors = [];
+            const posAttribute = geometry.attributes.position;
+            const colorDark = new THREE.Color(0x1a1a1a); 
+            const colorLight = new THREE.Color(0xdadada); 
+
+            for (let i = 0; i < posAttribute.count; i++) {
+                const y = posAttribute.getY(i);
+                const t = (y + cubeSize / 2) / cubeSize;
+                const c = colorDark.clone().lerp(colorLight, t);
+                colors.push(c.r, c.g, c.b);
+            }
+            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+            const baseMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.2, metalness: 0.4 });
+
+            // Path Coords adjusted for 21x21
+            const pathCoords = [];
+            let currentX = 2; let currentZ = 2;
+            pathCoords.push({x: currentX, z: currentZ});
+            const moves = [{dx: 4, dz: 0}, {dx: 0, dz: 4}, {dx: -2, dz: 0}, {dx: 0, dz: 5}, {dx: 8, dz: 0}, {dx: 0, dz: -4}, {dx: 5, dz: 0}, {dx: 0, dz: 10}, {dx: -9, dz: 0}, {dx: 0, dz: 3}, {dx: -4, dz: 0}];
+            
+            moves.forEach(m => {
+                let steps = Math.abs(m.dx || m.dz);
+                for(let i=0; i<steps; i++) {
+                    if(m.dx > 0) currentX++; else if(m.dx < 0) currentX--; else if(m.dz > 0) currentZ++; else if(m.dz < 0) currentZ--;
+                    currentX = clamp(currentX, 0, gridSize - 1); currentZ = clamp(currentZ, 0, gridSize - 1);
+                    let last = pathCoords[pathCoords.length-1];
+                    if (last.x !== currentX || last.z !== currentZ) pathCoords.push({x: currentX, z: currentZ});
+                }
+            });
+
+            function isPathCell(gx, gz) { return pathCoords.some(p => p.x === gx && p.z === gz); }
+            function getDistToPath(gx, gz) {
+                let minDist = Infinity;
+                for (let p of pathCoords) {
+                    let d = Math.sqrt(Math.pow(gx - p.x, 2) + Math.pow(gz - p.z, 2));
+                    if (d < minDist) minDist = d;
+                }
+                return minDist;
+            }
+
+            for (let x = 0; x < gridSize; x++) {
+                for (let z = 0; z < gridSize; z++) {
+                    const material = baseMaterial.clone(); 
+                    const mesh = new THREE.Mesh(geometry, material);
+                    const posX = (x * spacing) - offset;
+                    const posZ = (z * spacing) - offset;
+                    mesh.position.set(posX, 0, posZ);
+                    mesh.castShadow = true; mesh.receiveShadow = true;
+                    cubes.push({ mesh, gridX: x, gridZ: z, isPath: isPathCell(x, z), distToPath: getDistToPath(x, z), currentHeight: 0.5 });
+                    gridGroup.add(mesh);
+                }
+            }
+
+            const worldPath = pathCoords.map(p => new THREE.Vector3((p.x * spacing) - offset, 0, (p.z * spacing) - offset));
+
+            // Investigation Nodes adjusted for 21x21 center
+            const nodes = [{x: 4, z: 4, h: 4}, {x: 8, z: 3, h: 6}, {x: 14, z: 5, h: 3}, {x: 3, z: 10, h: 5}, {x: 9, z: 11, h: 4}, {x: 15, z: 12, h: 5}, {x: 5, z: 16, h: 3}, {x: 11, z: 17, h: 6}, {x: 16, z: 16, h: 4}, {x: 7, z: 8, h: 5}, {x: 12, z: 7, h: 4}, {x: 10, z: 14, h: 5}];
+            const edges = [[0,3], [3,9], [9,11], [11,7], [7,5], [5,2], [2,10], [10,1], [1,4], [4,8], [8,6], [6,0], [3,6], [9,4], [11,8], [1,10]];
+            const lineGeo = new THREE.BufferGeometry();
+            const linePositions = new Float32Array(edges.length * 6);
+            lineGeo.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+            const lineMat = new THREE.LineBasicMaterial({ color: 0xff285a, transparent: true, opacity: 0.0 });
+            const linesMesh = new THREE.LineSegments(lineGeo, lineMat);
+            gridGroup.add(linesMesh);
+
+            const stairsA = []; for(let i=0; i<=8; i++) stairsA.push({x: 5+i, z: 13-i, h: 1.0 + i*0.6, seg: 'A', idx: i});
+            const stairsB = []; for(let i=0; i<=8; i++) stairsB.push({x: 11-i, z: 7+i, h: 1.0 + i*0.6, seg: 'B', idx: i});
+
+            // --- The Pink Ball (Softened Light) ---
+            const ballRadius = 0.50; 
+            const ball = new THREE.Mesh(new THREE.SphereGeometry(ballRadius, 32, 32), new THREE.MeshStandardMaterial({ color: 0xff285a, roughness: 0.1, metalness: 0.6, emissive: 0xff285a, emissiveIntensity: 0.5 }));
+            ball.castShadow = true; ball.receiveShadow = true;
+            scene.add(ball);
+            const ballLight = new THREE.PointLight(0xff285a, 0.6, 6); ball.add(ballLight); // Reduced intensity
+            const heroSpotlight = new THREE.SpotLight(0xffffff, 1.5); heroSpotlight.position.set(0, 20, 0); scene.add(heroSpotlight); scene.add(heroSpotlight.target); // Reduced intensity
+
+            const tempVec3 = new THREE.Vector3(); const currentBgColor = new THREE.Color();
+            const tempColor1 = new THREE.Color(); const tempColor2 = new THREE.Color();
+            const tempNodeColor = new THREE.Color(); const tempStairColor = new THREE.Color();
+            const emissiveDark = new THREE.Color(0x000000); const emissivePink = new THREE.Color(0xff285a).multiplyScalar(1.2); 
+            const colorGrayBase = new THREE.Color(0x3a3a3a).multiplyScalar(0.25); const colorPinkAccent = new THREE.Color(0xff285a).multiplyScalar(0.4);
+            const colorWhite = new THREE.Color(0xffffff).multiplyScalar(0.5); const colorDarkGreyBg = new THREE.Color(0x161616); 
+            const stairTargetColors = []; for(let i=0; i<=8; i++) stairTargetColors.push(new THREE.Color().lerpColors(colorPinkAccent, colorWhite, i / 8));
+
+            // --- Corrected and Separated Progress Timelines ---
+            const clock = new THREE.Clock(); let targetProgress = 0; let progress = 0;
+
+            const menuToggle = document.getElementById('menu-toggle');
+            const fullscreenMenu = document.getElementById('fullscreen-menu');
+            const menuLinks = fullscreenMenu.querySelectorAll('.menu-link');
+            const l1 = document.getElementById('menu-line-1'); const l2 = document.getElementById('menu-line-2'); const l3 = document.getElementById('menu-line-3');
+            let isMenuOpen = false;
+            menuToggle.onclick = () => {
+                isMenuOpen = !isMenuOpen;
+                fullscreenMenu.style.opacity = isMenuOpen ? '1' : '0';
+                fullscreenMenu.style.transform = isMenuOpen ? 'translateX(0)' : 'translateX(100%)';
+                fullscreenMenu.style.pointerEvents = isMenuOpen ? 'auto' : 'none';
+                l1.style.transform = isMenuOpen ? 'translateY(10px) rotate(45deg)' : 'none';
+                l2.style.opacity = isMenuOpen ? '0' : '1';
+                l3.style.transform = isMenuOpen ? 'translateY(-10px) rotate(-45deg)' : 'none';
+            };
+            menuLinks.forEach(link => {
+                link.onclick = (e) => { e.preventDefault(); window.scrollTo({ top: (parseFloat(link.getAttribute('data-scroll')) / 1.6) * (document.documentElement.scrollHeight - window.innerHeight), behavior: 'smooth' }); menuToggle.click(); };
+            });
+
+            window.onscroll = () => { targetProgress = clamp((window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 1.6, 0, 1.6); };
+
+            const uiSections = [document.getElementById('ui-sec-1'), document.getElementById('ui-sec-2'), document.getElementById('ui-sec-3'), document.getElementById('ui-sec-4'), document.getElementById('ui-sec-5'), null, document.getElementById('ui-sec-7'), document.getElementById('ui-sec-8')];
+            const contentCards = [null, document.getElementById('content-card'), document.getElementById('content-card-3'), document.getElementById('content-card-4'), document.getElementById('content-card-5'), null, document.getElementById('content-card-7'), document.getElementById('content-card-8')];
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            // Master Timeline mapping perfectly to data-scroll points to avoid merging
+            const T_FLATTEN_END = 0.05; 
+            const T_ROLL_START = 0.05; 
+            const T_ROLL_END = 0.25;
+
+            const T_TRANS1_MID = 0.30; 
+            
+            // Cards mapping
+            const T_CARD1_IN = 0.30; const T_CARD1_OUT = 0.45;  // Phase 02 (Needs)
+            const T_CARD2_IN = 0.50; const T_CARD2_OUT = 0.70;  // Phase 03 (Disruption)
+            const T_CARD3_IN = 0.75; const T_CARD3_OUT = 0.95;  // Phase 04 (Bias)
+            const T_CARD4_IN = 1.00; const T_CARD4_OUT = 1.20;  // Phase 05 (Capability)
+
+            // 3D Elevator Drop
+            const T_ELEVATOR_START = 0.40; const T_ELEVATOR_MID = 0.44; const T_ELEVATOR_END = 0.48;
+            
+            // 3D Event: Phase 3 Pyramid
+            const T_PYRAMID_START = 0.50; const T_LAYER1 = 0.51; const T_LAYER2 = 0.52; const T_LAYER3 = 0.53; 
+            const T_DISSOLVE_L3 = 0.68; const T_DISSOLVE_L2 = 0.69; const T_DISSOLVE_L1 = 0.70; const T_DISSOLVE_END = 0.71;
+            
+            // 3D Event: Phase 4 Nodes
+            const T_NODES_RISE = 0.75; const T_LINES_APPEAR = 0.78; 
+            const T_LINES_FADE = 0.92; const T_NODES_LOWER = 0.93; const T_NODES_LOWER_END = 0.95;
+
+            // 3D Event: Phase 5 Stairs
+            const T_STAIRS_START = 0.98; 
+            
+            // Phase 6 Grid Drop out Timeline
+            const T_COLLAPSE_START = 1.20; const T_COLLAPSE_END = 1.30;
+            
+            // Scroll Timeline Maps (Phases 6 to 7)
+            const T_SCROLL_5_6_START = 1.20; const T_SCROLL_5_6_END = 1.30;
+            const T_SCROLL_7_8_START = 1.40; const T_SCROLL_7_8_END = 1.50;
+
+            let currentBallProgress1 = 0; let phase5BallTime = 0; let ballTime = 0; let currentPhase = 1;
+
+            // Synchronized Roll-up
+            function applyRollUp(id, start, end) {
+                const inner = document.getElementById(`sec-${id}-inner`);
+                if (inner) {
+                    let swapP = clamp((progress - start) / (end - start), 0, 1);
+                    let smoothP = swapP < 0.5 ? 2 * swapP * swapP : 1 - Math.pow(-2 * swapP + 2, 2) / 2;
+                    inner.style.transform = `translateY(-${smoothP * 50}%)`;
+                }
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                const delta = clamp(clock.getDelta(), 0, 0.1); const time = clock.getElapsedTime();
+                progress += (targetProgress - progress) * 0.05;
+
+                let lightFade = progress >= T_COLLAPSE_START ? 1.0 - clamp((progress - T_COLLAPSE_START) / (T_COLLAPSE_END - T_COLLAPSE_START), 0, 1) : 1.0;
+                heroSpotlight.intensity = lightFade * 1.5; // Softened Light
+                heroSpotlight.position.x = gridGroup.position.x + Math.sin(time * 0.5) * 14;
+                heroSpotlight.position.y = gridGroup.position.y + 20;
+                heroSpotlight.position.z = gridGroup.position.z + Math.cos(time * 0.3) * 14;
+                heroSpotlight.target.position.set(gridGroup.position.x + Math.sin(time * 0.5 + 0.5) * 8, gridGroup.position.y, gridGroup.position.z + Math.cos(time * 0.3 + 0.5) * 8);
+
+                if (progress < T_FLATTEN_END) {
+                    let slideP = clamp(progress / T_FLATTEN_END, 0, 1);
+                    uiSections[0].style.transform = `translateY(-${(1 - Math.pow(1 - slideP, 3)) * 100}vh)`;
+                    uiSections[0].style.opacity = 1 - slideP;
+                } else uiSections[0].style.opacity = 0;
+
+                const processCard = (idx, tIn, tOut) => {
+                    const card = contentCards[idx]; if (!card) return;
+                    if (progress >= tIn && (tOut ? progress <= tOut : true)) {
+                        uiSections[idx].style.opacity = 1;
+                        let pIn = clamp((progress - tIn) / 0.04, 0, 1); let pOut = tOut ? clamp((progress - (tOut - 0.04)) / 0.04, 0, 1) : 0;
+                        card.style.opacity = (1 - Math.pow(1 - pIn, 3)) * (1 - (pOut * pOut * (3 - 2 * pOut)));
+                        card.style.transform = `translateY(${( (1 - pIn) * 40 - (pOut * 40) )}px)`;
+                    } else uiSections[idx].style.opacity = 0;
+                };
+
+                // Execute UI Cards
+                processCard(1, T_CARD1_IN, T_CARD1_OUT); // Section 2 Needs
+                processCard(2, T_CARD2_IN, T_CARD2_OUT); // Section 3 Readiness
+                processCard(3, T_CARD3_IN, T_CARD3_OUT); // Section 4 Bias
+                processCard(4, T_CARD4_IN, T_COLLAPSE_START); // Section 5 Capability
+
+                // Execute Roll-ups directly mapped to the middle point of each card's active lifecycle
+                applyRollUp(3, 0.58, 0.62);
+                applyRollUp(4, 0.83, 0.87);
+                applyRollUp(5, 1.08, 1.12);
+
+                const processScroll = (idx, inS, inE, outS, outE) => {
+                    const ui = uiSections[idx]; if (!ui) return;
+                    if (progress >= inS && (outE ? progress <= outE : true)) {
+                        ui.style.opacity = 1; let y = 0;
+                        if (progress < inE) { let t = clamp((progress - inS)/(inE - inS), 0, 1); y = 100 - ( (t < 0.5 ? 2*t*t : 1-Math.pow(-2*t+2, 2)/2) * 100 ); }
+                        else if (outS && progress > outS) { let t = clamp((progress - outS)/(outE - outS), 0, 1); y = -( (t < 0.5 ? 2*t*t : 1-Math.pow(-2*t+2, 2)/2) * 100 ); }
+                        ui.style.transform = `translateY(${y}vh)`;
+                    } else ui.style.opacity = 0;
+                };
+                
+                processScroll(6, T_SCROLL_5_6_START, T_SCROLL_5_6_END, T_SCROLL_7_8_START, T_SCROLL_7_8_END);
+                processScroll(7, T_SCROLL_7_8_START, T_SCROLL_7_8_END, null, null);
+
+                if (progress >= T_COLLAPSE_START) {
+                    let tBg = clamp((progress - T_COLLAPSE_START) / 0.1, 0, 1); currentBgColor.lerpColors(emissiveDark, colorDarkGreyBg, tBg);
+                    document.body.style.backgroundColor = '#' + currentBgColor.getHexString(); scene.fog.color.copy(currentBgColor);
+                    container.style.opacity = 1.0 - clamp((progress - 1.5) / 0.1, 0, 1);
+                } else { document.body.style.backgroundColor = '#000'; scene.fog.color.setHex(0); container.style.opacity = 1; }
+
+                if (progress < T_TRANS1_MID) currentPhase = 1; else if (progress < T_PYRAMID_START) currentPhase = 2; else currentPhase = 3;
+                
+                let elevatorY = 0;
+                if (progress >= T_ELEVATOR_START && progress < T_ELEVATOR_MID) elevatorY = THREE.MathUtils.lerp(0, -35, Math.pow(clamp((progress - T_ELEVATOR_START)/(T_ELEVATOR_MID-T_ELEVATOR_START), 0, 1), 2));
+                else if (progress >= T_ELEVATOR_MID && progress <= T_ELEVATOR_END) elevatorY = THREE.MathUtils.lerp(-35, 0, 1 - Math.pow(1 - clamp((progress - T_ELEVATOR_MID)/(T_ELEVATOR_END-T_ELEVATOR_MID), 0, 1), 2));
+                
+                let phase6Drop = 0; let scale = 1.0;
+                if (progress >= T_COLLAPSE_START) { let dp = clamp((progress - T_COLLAPSE_START)/0.1, 0, 1); phase6Drop = -100 * dp * dp * dp; scale = 1.0 - (dp * dp * dp); }
+                let baseLevelY = progress >= T_TRANS1_MID ? -40 : 0;
+                gridGroup.position.set(currentPhase === 1 ? 0 : -8, baseLevelY + elevatorY + phase6Drop, currentPhase === 1 ? 0 : 8);
+                camera.position.set(45, 45 + baseLevelY + phase6Drop, 45); camera.lookAt(0, baseLevelY + phase6Drop, 0);
+
+                // Safe calculation of Pyramids (Fading out BEFORE Nodes Rise)
+                let effL1 = 0, effL2 = 0, effL3 = 0;
+                if (currentPhase === 3) {
+                    let tL1 = clamp((progress - T_PYRAMID_START)/(T_LAYER1 - T_PYRAMID_START), 0, 1); 
+                    let tL2 = clamp((progress - T_LAYER1)/(T_LAYER2 - T_LAYER1), 0, 1); 
+                    let tL3 = clamp((progress - T_LAYER2)/(T_LAYER3 - T_LAYER2), 0, 1);
+
+                    let dL3 = 1 - clamp((progress - T_DISSOLVE_L3)/(T_DISSOLVE_L2 - T_DISSOLVE_L3), 0, 1);
+                    let dL2 = 1 - clamp((progress - T_DISSOLVE_L2)/(T_DISSOLVE_L1 - T_DISSOLVE_L2), 0, 1);
+                    let dL1 = 1 - clamp((progress - T_DISSOLVE_L1)/(T_DISSOLVE_END - T_DISSOLVE_L1), 0, 1);
+
+                    tL1 = 1 - Math.pow(1 - tL1, 3); tL2 = 1 - Math.pow(1 - tL2, 3); tL3 = 1 - Math.pow(1 - tL3, 3);
+                    dL3 = dL3 * dL3 * (3 - 2 * dL3); dL2 = dL2 * dL2 * (3 - 2 * dL2); dL1 = dL1 * dL1 * (3 - 2 * dL1);
+
+                    effL1 = Math.min(tL1, dL1); effL2 = Math.min(tL2, dL2); effL3 = Math.min(tL3, dL3);
+                }
+
+                let pathFadeOut = progress > T_ROLL_END ? clamp((progress - T_ROLL_END) / 0.05, 0, 1) : 0;
+
+                cubes.forEach(c => {
+                    let targetH = 0.5;
+                    if (currentPhase === 1) {
+                        const wallPattern = Math.max(Math.pow(Math.abs(Math.sin(c.gridX * 0.5 + time * 0.1)), 8), Math.pow(Math.abs(Math.cos(c.gridZ * 0.5 - time * 0.1)), 8));
+                        targetH = 1.0 + wallPattern * 3.0;
+                        let flatP = 1 - Math.pow(1 - clamp(progress / T_FLATTEN_END, 0, 1), 3);
+                        if (c.isPath) {
+                            targetH = THREE.MathUtils.lerp(1.0 + wallPattern * 0.2, 0.5, flatP);
+                            tempColor1.lerpColors(emissivePink, emissiveDark, pathFadeOut); c.mesh.material.emissive.copy(tempColor1);
+                        } else {
+                            targetH = THREE.MathUtils.lerp(targetH, 1.5, flatP);
+                            if (c.distToPath <= 3.0) {
+                                tempColor1.lerpColors(emissiveDark, emissivePink, Math.max(0, 1 - (c.distToPath/3)) * 0.45);
+                                tempColor2.lerpColors(tempColor1, emissiveDark, pathFadeOut); c.mesh.material.emissive.copy(tempColor2);
+                            } else c.mesh.material.emissive.copy(emissiveDark);
+                        }
+                    } else if (currentPhase === 2) {
+                        const t1 = time * 0.6; // Sped up primary wave
+                        const t2 = time * 1.0; // Sped up secondary intersecting wave
+                        const wave1 = Math.sin(c.gridX * 0.2 + t1) * Math.cos(c.gridZ * 0.2 - t1);
+                        const wave2 = Math.sin(c.gridX * 0.4 - t2) * Math.cos(c.gridZ * 0.4 + t2);
+                        
+                        targetH = 1.2 + (wave1 * 1.2) + (wave2 * 0.6);
+                        c.mesh.material.emissive.copy(emissiveDark);
+                    } else if (currentPhase === 3) {
+                        let d = Math.max(Math.abs(c.gridX - 10), Math.abs(c.gridZ - 10)); // Adjusted center to 10 for 21x21
+                        let pHeight = 0.5;
+                        if (d <= 5) { pHeight = THREE.MathUtils.lerp(0.5, 1.5, effL1); tempColor2.lerpColors(emissiveDark, colorPinkAccent, effL1); }
+                        if (d <= 3) { pHeight = THREE.MathUtils.lerp(pHeight, 3.0, effL2); if(effL2 > 0) tempColor2.lerpColors(colorPinkAccent, colorGrayBase, effL2); }
+                        if (d <= 1) { pHeight = THREE.MathUtils.lerp(pHeight, 4.5, effL3); if(effL3 > 0) tempColor2.lerpColors(colorGrayBase, colorGrayBase, effL3); }
+                        
+                        let nHeight = 0.5; const nIdx = nodes.findIndex(n => n.x === c.gridX && n.z === c.gridZ);
+                        if (nIdx !== -1) {
+                            let tRise = 1 - Math.pow(1 - clamp((progress - T_NODES_RISE)/(T_LINES_APPEAR - T_NODES_RISE), 0, 1), 3);
+                            let tLower = 1 - Math.pow(1 - clamp((progress - T_NODES_LOWER)/(T_NODES_LOWER_END - T_NODES_LOWER), 0, 1), 3);
+                            
+                            let currentNHeight = THREE.MathUtils.lerp(0.5, nodes[nIdx].h, tRise);
+                            nHeight = THREE.MathUtils.lerp(currentNHeight, 0.5, tLower);
+
+                            tempNodeColor.lerpColors(colorPinkAccent, emissivePink, 0.5 + Math.sin(time * 2 + nIdx)*0.5);
+                            tempColor1.lerpColors(emissiveDark, tempNodeColor, tRise); 
+                            tempNodeColor.lerpColors(tempColor1, emissiveDark, tLower);
+                        }
+                        
+                        let sHeight = 0.5; const sDef = stairsA.find(s => s.x === c.gridX && s.z === c.gridZ) || stairsB.find(s => s.x === c.gridX && s.z === c.gridZ);
+                        if (sDef && progress >= T_STAIRS_START) {
+                            let lp = phase5BallTime % 20;
+                            if (sDef.seg === 'A') sHeight = lp < 10 ? 0.5 + (sDef.h - 0.5) * clamp(lp - sDef.idx + 2, 0, 1) : sDef.h - (sDef.h - 0.5) * clamp(lp - 10 - sDef.idx * 0.2, 0, 1);
+                            else sHeight = lp >= 10 ? 0.5 + (sDef.h - 0.5) * clamp(lp - 10 - sDef.idx + 2, 0, 1) : sDef.h - (sDef.h - 0.5) * clamp(lp - sDef.idx * 0.2, 0, 1);
+                            tempStairColor.lerpColors(emissiveDark, stairTargetColors[sDef.idx], clamp((sHeight - 0.5) / (sDef.h - 0.5), 0, 1));
+                        }
+                        
+                        targetH = Math.max(pHeight, nHeight, sHeight);
+                        if (targetH === sHeight && sHeight > 0.5) c.mesh.material.emissive.copy(tempStairColor);
+                        else if (targetH === nHeight && nHeight > 0.5) c.mesh.material.emissive.copy(tempNodeColor);
+                        else if (targetH === pHeight && pHeight > 0.5) c.mesh.material.emissive.copy(tempColor2);
+                        else c.mesh.material.emissive.copy(emissiveDark);
+                    }
+                    targetH *= scale; const h = Math.max(0.001, targetH);
+                    c.mesh.scale.set(scale, h, scale); c.mesh.position.y = h / 2; c.currentHeight = h;
+                });
+
+                if (progress >= T_NODES_RISE && progress < T_NODES_LOWER_END) {
+                    linesMesh.material.opacity = clamp((progress - T_LINES_APPEAR)/0.05, 0, 1) * (1 - clamp((progress - T_LINES_FADE)/0.05, 0, 1)) * (0.4 + Math.sin(time*3)*0.2);
+                    const pos = linesMesh.geometry.attributes.position.array; let i = 0;
+                    edges.forEach(e => {
+                        const n1 = nodes[e[0]]; const n2 = nodes[e[1]];
+                        const c1 = cubes.find(c => c.gridX === n1.x && c.gridZ === n1.z); const c2 = cubes.find(c => c.gridX === n2.x && c.gridZ === n2.z);
+                        pos[i++] = (n1.x*spacing)-offset; pos[i++] = c1?c1.currentHeight:0.5; pos[i++] = (n1.z*spacing)-offset;
+                        pos[i++] = (n2.x*spacing)-offset; pos[i++] = c2?c2.currentHeight:0.5; pos[i++] = (n2.z*spacing)-offset;
+                    });
+                    linesMesh.geometry.attributes.position.needsUpdate = true;
+                } else {
+                    linesMesh.material.opacity = 0;
+                }
+
+                let tx = 0, tz = 0, arc = 0;
+                if (currentPhase === 1) {
+                    ballTime += delta;
+                    let bTarget = progress === 0 ? (Math.sin(ballTime*0.3)*0.5+0.5)*(worldPath.length*0.2) : (progress <= T_ROLL_END ? clamp((progress-T_ROLL_START)/(T_ROLL_END-T_ROLL_START),0,1)*(worldPath.length-1) : worldPath.length-1);
+                    currentBallProgress1 += (bTarget - currentBallProgress1) * 0.04;
+                    const idx = Math.floor(currentBallProgress1); const f = currentBallProgress1 - idx;
+                    tempVec3.lerpVectors(worldPath[idx], worldPath[Math.min(idx+1, worldPath.length-1)], f); tx = tempVec3.x; tz = tempVec3.z;
+                    if (progress > T_ROLL_END && progress < T_TRANS1_MID) arc -= 60 * Math.pow(clamp((progress-T_ROLL_END)/(T_TRANS1_MID-T_ROLL_END),0,1), 2);
+                    else if (progress >= T_TRANS1_MID && progress < T_TRANS1_MID+0.05) {
+                        let dp = clamp((progress-T_TRANS1_MID)/0.03,0,1); arc = dp < 1 ? 60 * Math.pow(1-dp,2) : Math.abs(Math.sin(clamp((progress-(T_TRANS1_MID+0.03))/0.02,0,1)*Math.PI))*2.5;
+                    }
+                } else if (currentPhase === 2) {
+                    tx = (Math.sin(time*0.4)*(offset*0.6)) + gridGroup.position.x; tz = (Math.cos(time*0.3)*(offset*0.6)) + gridGroup.position.z;
+                } else {
+                    if (progress < T_DISSOLVE_END) { 
+                        // Sits at center during pyramid
+                        tx = (10*spacing)-offset + gridGroup.position.x; tz = (10*spacing)-offset + gridGroup.position.z; 
+                    } else if (progress < T_STAIRS_START) {
+                        // Jumps around nodes
+                        const ballNodePath = [0, 3, 9, 11, 7, 5, 2, 1, 4, 8, 10, 6]; 
+                        const jumpTime = (time * 0.6);
+                        const jumpIdx = Math.floor(jumpTime) % ballNodePath.length;
+                        const nextJumpIdx = (jumpIdx + 1) % ballNodePath.length;
+                        let jumpFrac = jumpTime % 1;
+                        let easeFrac = clamp((jumpFrac - 0.2) / 0.6, 0, 1);
+                        easeFrac = easeFrac * easeFrac * (3 - 2 * easeFrac); 
+                        
+                        const n1 = nodes[ballNodePath[jumpIdx]]; const n2 = nodes[ballNodePath[nextJumpIdx]];
+                        const lx = THREE.MathUtils.lerp(n1.x, n2.x, easeFrac); const lz = THREE.MathUtils.lerp(n1.z, n2.z, easeFrac);
+                        tx = (lx * spacing) - offset + gridGroup.position.x; tz = (lz * spacing) - offset + gridGroup.position.z;
+                        
+                        ball.rotation.x += (n2.z - n1.z) * (jumpFrac * 0.01); ball.rotation.z -= (n2.x - n1.x) * (jumpFrac * 0.01);
+                        arc += Math.sin(easeFrac * Math.PI) * 2.0; 
+                    } else {
+                        // Rides stairs
+                        phase5BallTime += delta * 4; let lp = phase5BallTime % 20;
+                        let lx, lz;
+                        if (lp < 8) { let idx = Math.floor(lp); lx = THREE.MathUtils.lerp(stairsA[idx].x, stairsA[idx+1].x, lp-idx); lz = THREE.MathUtils.lerp(stairsA[idx].z, stairsA[idx+1].z, lp-idx); }
+                        else if (lp < 10) { let f = (lp-8)/2; lx = THREE.MathUtils.lerp(stairsA[8].x, stairsB[0].x, f); lz = THREE.MathUtils.lerp(stairsA[8].z, stairsB[0].z, f); arc += Math.sin(f*Math.PI)*2.5; }
+                        else if (lp < 18) { let idx = Math.floor(lp-10); lx = THREE.MathUtils.lerp(stairsB[idx].x, stairsB[idx+1].x, lp-10-idx); lz = THREE.MathUtils.lerp(stairsB[idx].z, stairsB[idx+1].z, lp-10-idx); }
+                        else { let f = (lp-18)/2; lx = THREE.MathUtils.lerp(stairsB[8].x, stairsA[0].x, f); lz = THREE.MathUtils.lerp(stairsB[8].z, stairsA[0].z, f); arc += Math.sin(f*Math.PI)*2.5; }
+                        tx = (lx*spacing)-offset + gridGroup.position.x; tz = (lz*spacing)-offset + gridGroup.position.z;
+                    }
+                }
+                ball.position.x += (tx - ball.position.x)*0.2; ball.position.z += (tz - ball.position.z)*0.2;
+                const cB = cubes.find(c => c.gridX === Math.round((ball.position.x-gridGroup.position.x+offset)/spacing) && c.gridZ === Math.round((ball.position.z-gridGroup.position.z+offset)/spacing));
+                ball.position.y += (( (cB?cB.currentHeight:1)+ballRadius+gridGroup.position.y+arc ) - ball.position.y) * 0.15;
+                ball.scale.setScalar(scale); renderer.render(scene, camera);
+            }
+            animate();
+        };
+    </script>
+</body>
+</html>
